@@ -5,9 +5,13 @@ import asyncio
 
 
 class StatusManager(ThreadModuleAbstract):
-    media_player = False
+    media_player = True
     phone_connected = False
     network_name = None
+
+    def __init__(self, bus):
+        super().__init__(bus)
+        eventBus.add_event(self.open_media_player, 'Radio:open_media_player')
 
     def execute(self):
         asyncio.set_event_loop(self.loop)
@@ -23,7 +27,7 @@ class StatusManager(ThreadModuleAbstract):
     #         return [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x84]
     #     return [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]
 
-    @eventBus.on('Radio:open_media_player')
+    # @eventBus.on('Radio:open_media_player')
     def open_media_player(self):
         self.media_player = True
 
@@ -52,5 +56,7 @@ class StatusManager(ThreadModuleAbstract):
         else: return bytearray([0x00])
 
     def __get_media_player_byte(self):
-        if self.media_player: return bytearray([0x84])
-        else: return bytearray([0x80])
+        if self.media_player:
+            return bytearray([0x84])
+        else:
+            return bytearray([0x80])

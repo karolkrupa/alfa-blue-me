@@ -56,4 +56,4 @@ class SteeringWheel(Device):
     def __on_button_click(self, button):
         if button is Button.none:
             return None
-        eventBus.emit('SteeringWheel:' + button)
+        eventBus.emit('SteeringWheel:' + str(button.name))

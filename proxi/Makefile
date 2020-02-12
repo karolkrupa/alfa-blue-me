@@ -1,8 +1,8 @@
-CC = gcc
-CFLAGS = -Wall -g -O0
+CC=gcc
+CFLAGS=-I.
 
-proxi:proxi.c
-	    $(CC) $(CFLAGS) -o $@ $^
+proxi: proxi.o
+	$(CC) -static -o proxi proxi.o
 
 clean:
 	    $(RM) proxi .*.sw?

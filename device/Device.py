@@ -11,10 +11,9 @@ class Device:
     def send_frames(self, id, frames: [[]]):
         for frame in frames:
             self.bus.send(can.Message(arbitration_id=id, data=frame, extended_id=False))
-            time.sleep(0.05)
+            time.sleep(0.01)
 
     def on_message(self, msg: can.Message):
-        print('On message')
         if msg.arbitration_id in self.arbitration_ids:
             self.__received_message(msg)
 

@@ -76,7 +76,6 @@ def encode(message: str, message_target):
 
 def __convert_to_binary(text) -> str:
     encoded = ''
-    print(text)
     text = remove_accents(text.upper())
 
     for letter in text:
@@ -121,4 +120,4 @@ def __create_frames_from_bytes(bytes_array: [], message_target):
 
 
 def __get_frames_count_byte(frames_count, current_frame):
-    return int('0x' + str(frames_count) + str(current_frame), 16)
+    return int('0x' + hex(frames_count)[2:] + hex(current_frame)[2:], 16)

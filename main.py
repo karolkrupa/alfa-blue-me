@@ -10,13 +10,13 @@ from module.StatusManager import StatusManager
 
 loop = asyncio.get_event_loop()
 
-can0 = can.ThreadSafeBus(channel = 'can0', bustype = 'virtual')
+can0 = can.ThreadSafeBus(channel = 'can0', bustype = 'socketcan_ctypes')
 # can0 = can.ThreadSafeBus(channel = 'can0', bustype = 'socketcan_ctypes')
 
 
 proxi = Proxi(can0, loop)
-# status_manager = StatusManager(can0)
-# status_manager.run()
+status_manager = StatusManager(can0)
+status_manager.run()
 steering_wheel = SteeringWheel(can0)
 instrument_panel = InstrumentPanel(can0)
 radio = Radio(can0)

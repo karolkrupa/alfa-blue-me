@@ -19,6 +19,8 @@ class A2DP(ThreadModuleAbstract):
     player_props = None
     player = None
 
+    time = 1000
+
     def __init__(self, bus: can.ThreadSafeBus,
                  steering_wheel: SteeringWheel,
                  instrument_panel: InstrumentPanel,
@@ -28,10 +30,9 @@ class A2DP(ThreadModuleAbstract):
         self.steering_wheel = steering_wheel
         self.instrument_panel = instrument_panel
         self.radio = radio
-
-    @eventBus.on('test')
-    def test(self):
-        print('elo')
+        eventBus.add_event(self.next, 'SteeringWheel:next')
+        eventBus.add_event(self.prev, 'SteeringWheel:prev')
+        eventBus.add_event(self.__play_pause, 'SteeringWheel:mute')
 
     def execute(self):
         asyncio.set_event_loop(self.loop)
@@ -59,7 +60,6 @@ class A2DP(ThreadModuleAbstract):
         if interface == 'org.bluez.MediaPlayer1':
             self.loop.call_soon_threadsafe(self.on_media_player_property_change, changed)
         elif interface == 'org.bluez.Device1':
-            print('Device prop', changed.get('Connected'))
             if changed.get('Connected'):
                 self.loop.call_soon_threadsafe(self.loop.call_later, 0.5, self.find_media_player)
             else:
@@ -78,7 +78,8 @@ class A2DP(ThreadModuleAbstract):
             self.player_connected = True
             self.player = dbus.Interface(player, dbus_interface='org.bluez.MediaPlayer1')
             self.player_props = dbus.Interface(player, "org.freedesktop.DBus.Properties")
-            self.refresh_properties()
+            time.sleep(0.5)
+            self.refresh_properties(True)
             # GLib.MainLoop().run()
             print('Player found')
             break
@@ -86,11 +87,16 @@ class A2DP(ThreadModuleAbstract):
             print('Player not found')
             self.player_connected = False
 
-    def refresh_properties(self):
+    def refresh_properties(self, update_track_name = False):
 
         if self.player_connected:
-            print('refresh')
             self.display_position(self.player_props.Get("org.bluez.MediaPlayer1", 'Position'))
+
+            if update_track_name:
+                if self.player_props.Get("org.bluez.MediaPlayer1", 'Status') == 'playing':
+                    self.playing = True
+                self.display_track_name('Brak', 'Brak')
+            # self.display_position(self.time)
         self.loop.call_later(1, self.refresh_properties)
 
     def display_position(self, position):
@@ -109,11 +115,13 @@ class A2DP(ThreadModuleAbstract):
             if prop == 'Status':
                 if value == 'playing':
                     self.playing = True
+                else:
+                    self.playing = False
             elif prop == 'Track':
                 if value.get('Title', ''):
                     self.display_track_name(value.get('Artist', ''), value.get('Title', ''))
 
-    def display_track_name(self, artist, title, folder_name=''):
+    def display_track_name(self, artist, title):
         if artist:
             self.radio.set_display_mode(DisplayMode.artists)
         else:
@@ -123,34 +131,25 @@ class A2DP(ThreadModuleAbstract):
         self.radio.set_second_filed(title)
         self.radio.display()
 
-    @eventBus.on('SteeringWheel:next')
     def next(self):
         if not self.player_connected: return
-        print('next')
         self.player.Next()
 
-    @eventBus.on('SteeringWheel:prev')
     def prev(self):
         if not self.player_connected: return
-        print('prev')
         self.player.Previous()
 
     def play(self):
         if not self.player_connected: return
-        print('play')
         self.player.Play()
 
     def pause(self):
         if not self.player_connected: return
-        print('pause')
         self.player.Pause()
 
-    @eventBus.on('SteeringWheel:mute')
     def __play_pause(self):
         if not self.player_connected: return
         if not self.playing:
             self.play()
-            print('play')
         else:
             self.pause()
-            print('mute')
