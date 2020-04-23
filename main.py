@@ -7,14 +7,36 @@ from device.InstrumentPanel import InstrumentPanel
 from device.Radio import Radio
 from module.Proxi import Proxi
 from module.StatusManager import StatusManager
+from bluetooth.Manger import Manager as BluetoothManager
+import dbus
+from module.EventBus import mainEventBus
+try:
+    from gi.repository import GObject
+except ImportError:
+    import gobject as GObject
 
 loop = asyncio.get_event_loop()
 
-can0 = can.ThreadSafeBus(channel = 'can0', bustype = 'socketcan_ctypes')
-# can0 = can.ThreadSafeBus(channel = 'can0', bustype = 'socketcan_ctypes')
+can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
+# can0 = can.ThreadSafeBus(channel = 'vcan', bustype = 'virtual')
+
+btManager = BluetoothManager()
+btManager.register_agent()
+btManager.register_device_manager()
 
 
-proxi = Proxi(can0, loop)
+def notify(arg):
+    print('EVENT')
+    print(arg)
+
+mainEventBus.on('bt-device-manager:active-player', notify)
+
+print(btManager.device_manager.get_active_device().get_player())
+
+mainloop = GObject.MainLoop()
+mainloop.run()
+
+# proxi = Proxi(can0, loop)
 status_manager = StatusManager(can0)
 status_manager.run()
 steering_wheel = SteeringWheel(can0)
@@ -30,8 +52,7 @@ a2dpInstance.run()
 
 
 can.Notifier(can0, [
-    steering_wheel.on_message,
-    proxi.on_message
+    steering_wheel.on_message
 ], loop=loop)
 
 try:

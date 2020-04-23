@@ -5,7 +5,7 @@ import asyncio
 
 
 class StatusManager(ThreadModuleAbstract):
-    media_player = True
+    media_player = False
     phone_connected = False
     network_name = None
 

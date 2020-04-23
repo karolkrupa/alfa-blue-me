@@ -9,7 +9,7 @@ from utils.EventBus import eventBus
 from threading import Thread
 import asyncio
 import time
-
+from pprint import pprint
 
 class A2DP(ThreadModuleAbstract):
     player_connected = False
@@ -30,6 +30,7 @@ class A2DP(ThreadModuleAbstract):
         self.steering_wheel = steering_wheel
         self.instrument_panel = instrument_panel
         self.radio = radio
+
         eventBus.add_event(self.next, 'SteeringWheel:next')
         eventBus.add_event(self.prev, 'SteeringWheel:prev')
         eventBus.add_event(self.__play_pause, 'SteeringWheel:mute')
@@ -38,7 +39,6 @@ class A2DP(ThreadModuleAbstract):
         asyncio.set_event_loop(self.loop)
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self.register_dbus_listeners()
-        self.find_media_player()
         self.find_media_player()
         self.loop.run_forever()
 
@@ -57,6 +57,8 @@ class A2DP(ThreadModuleAbstract):
         self.glib_thread.start()
 
     def on_dbus_property_changed(self, interface, changed, invalidated):
+        print(interface)
+        pprint(changed)
         if interface == 'org.bluez.MediaPlayer1':
             self.loop.call_soon_threadsafe(self.on_media_player_property_change, changed)
         elif interface == 'org.bluez.Device1':
@@ -70,22 +72,38 @@ class A2DP(ThreadModuleAbstract):
         bus = dbus.SystemBus()
         obj = bus.get_object('org.bluez', "/")
         mgr = dbus.Interface(obj, 'org.freedesktop.DBus.ObjectManager')
+        mediaPlayer = dbus.Interface(obj, 'org.bluez.MediaPlayer1')
+        # print(mediaPlayer.Status)
+        #
+        # for cos in mediaPlayer:
+        #     print(cos)
+
+        # print(mediaPlayer.Get('org.bluez.MediaPlayer1', 'Name'))
+        # print(mediaPlayer)
+        # vars(mediaPlayer)
+        self.player_connected = False
         for path, ifaces in mgr.GetManagedObjects().items():
             adapter = ifaces.get('org.bluez.MediaPlayer1')
             if not adapter:
                 continue
+            print(path)
             player = bus.get_object('org.bluez', path)
-            self.player_connected = True
-            self.player = dbus.Interface(player, dbus_interface='org.bluez.MediaPlayer1')
-            self.player_props = dbus.Interface(player, "org.freedesktop.DBus.Properties")
-            time.sleep(0.5)
-            self.refresh_properties(True)
-            # GLib.MainLoop().run()
-            print('Player found')
-            break
-        if not adapter:
-            print('Player not found')
-            self.player_connected = False
+            playerIface = dbus.Interface(player, 'org.bluez.MediaPlayer1')
+            propsIface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
+            # print(propsIface.Get('org.bluez.MediaPlayer1', 'Status'))
+            # print(player.Status)
+            # pprint(propsIface.GetAll('org.bluez.MediaPlayer1'))
+        #     self.player_connected = True
+        #     self.player = dbus.Interface(player, dbus_interface='org.bluez.MediaPlayer1')
+        #     self.player_props = dbus.Interface(player, "org.freedesktop.DBus.Properties")
+        #     time.sleep(0.5)
+        #     self.refresh_properties(True)
+        #     # GLib.MainLoop().run()
+        #     print('Player found')
+        #     break
+        # if not adapter:
+        #     print('Player not found')
+        #     self.player_connected = False
 
     def refresh_properties(self, update_track_name = False):
 
@@ -127,6 +145,7 @@ class A2DP(ThreadModuleAbstract):
         else:
             self.radio.set_display_mode(DisplayMode.text)
 
+        print('dispaly track');
         self.radio.set_first_field(artist)
         self.radio.set_second_filed(title)
         self.radio.display()
