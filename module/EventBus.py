@@ -2,7 +2,15 @@ import uuid
 
 
 class EventBus:
-    callbacks: dict = {}
+    callbacks: dict
+    forwards: dict
+
+    def __init__(self):
+        self.callbacks = {}
+        self.forwards = {}
+
+    def __del__(self):
+        self.off_all()
 
     def on(self, event_name: str, callback):
         callback_id = str(uuid.uuid1())
@@ -28,12 +36,24 @@ class EventBus:
 
         del self.callbacks[event_name][callback_id]
 
-    def trigger(self, event_name: str, args: dict = {}):
-        if event_name not in self.callbacks:
-            return
+    def off_all(self):
+        self.callbacks = {}
+        self.forwards = {}
 
-        for callback in self.callbacks[event_name].values():
-            callback(args)
+    def trigger(self, event_name: str, args: dict = {}):
+        if event_name in self.callbacks:
+            for callback in self.callbacks[event_name].values():
+                callback(args)
+
+        for prefix, bus in self.forwards.items():
+            bus.trigger(prefix + ':' + event_name, args)
+
+    def add_forwarding(self, prefix: str, bus):
+        self.forwards[prefix] = bus
+
+    def remove_forwarding(self, prefix: str):
+        if prefix in self.forwards:
+            del self.forwards[prefix]
 
 
 class EventPointer:

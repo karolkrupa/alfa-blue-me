@@ -25,11 +25,11 @@ defaultManger.register_device_manager()
 
 player = defaultManger.device_manager.get_active_device().get_player()
 
-def test(arg):
-    print(player.get_all_props())
-
-
-player.event_bus.on('properties-changed', test)
+# def test(arg):
+#     print(player.get_all_props())
+#
+#
+# player.event_bus.on('properties-changed', test)
 
 player.stop()
 # player.play()

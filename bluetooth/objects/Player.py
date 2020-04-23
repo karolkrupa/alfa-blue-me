@@ -7,9 +7,10 @@ class Player:
     __player_object = None
     __player_iface = None
     __props_iface = None
-    event_bus: EventBus = EventBus()
+    event_bus: EventBus
 
     def __init__(self, player_path: str):
+        self.event_bus = EventBus()
         self.__path = player_path
         self.__player_object = dbus.SystemBus().get_object('org.bluez', player_path)
         self.__player_object.connect_to_signal(
@@ -19,6 +20,10 @@ class Player:
         )
         self.__player_iface = dbus.Interface(self.__player_object, 'org.bluez.MediaPlayer1')
         self.__props_iface = dbus.Interface(self.__player_object, 'org.freedesktop.DBus.Properties')
+
+    def __del__(self):
+        self.event_bus.off_all()
+        del self.event_bus
 
     def play(self):
         self.__player_iface.Play()
