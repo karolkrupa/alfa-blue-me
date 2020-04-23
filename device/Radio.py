@@ -2,7 +2,6 @@ from device.ThreadedDevice import ThreadedDevice
 import utils.TextEncoder as TextEncoder
 from enum import Enum
 from utils.EventBus import eventBus
-import asyncio
 
 
 class DisplayMode(Enum):
@@ -23,7 +22,6 @@ class Radio(ThreadedDevice):
     display_mode = DisplayMode.text
 
     def execute(self):
-        asyncio.set_event_loop(self.loop)
         self.display_time()
         self.loop.run_forever()
 
@@ -75,3 +73,7 @@ class Radio(ThreadedDevice):
 # 60 - Albums Album<field separator>Tekst
 # 68 - Playlists
 # 70 nic
+
+
+radio = Radio()
+radio.run()

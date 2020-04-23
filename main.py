@@ -1,14 +1,14 @@
-import can
+# import can
 import asyncio
-from threading import Thread
-from module.A2DP import A2DP
-from device.SteeringWheel import SteeringWheel
-from device.InstrumentPanel import InstrumentPanel
-from device.Radio import Radio
-from module.Proxi import Proxi
-from module.StatusManager import StatusManager
-from bluetooth.Manger import Manager as BluetoothManager
-import dbus
+# from threading import Thread
+# from module.A2DP import A2DP
+# from device.SteeringWheel import SteeringWheel
+# from device.InstrumentPanel import InstrumentPanel
+from device.Radio import radio
+# from module.Proxi import Proxi
+# from module.StatusManager import StatusManager
+from bluetooth.Manger import defaultManger
+# import dbus
 from module.EventBus import mainEventBus
 try:
     from gi.repository import GObject
@@ -17,48 +17,53 @@ except ImportError:
 
 loop = asyncio.get_event_loop()
 
-can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
+# can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
 # can0 = can.ThreadSafeBus(channel = 'vcan', bustype = 'virtual')
 
-btManager = BluetoothManager()
-btManager.register_agent()
-btManager.register_device_manager()
+defaultManger.register_agent()
+defaultManger.register_device_manager()
+
+player = defaultManger.device_manager.get_active_device().get_player()
+
+def test(arg):
+    print(player.get_all_props())
 
 
-def notify(arg):
-    print('EVENT')
-    print(arg)
+player.event_bus.on('properties-changed', test)
 
-mainEventBus.on('bt-device-manager:active-player', notify)
+player.stop()
+# player.play()
+# print(player.get_all_props())
 
-print(btManager.device_manager.get_active_device().get_player())
+
+
 
 mainloop = GObject.MainLoop()
 mainloop.run()
 
-# proxi = Proxi(can0, loop)
-status_manager = StatusManager(can0)
-status_manager.run()
-steering_wheel = SteeringWheel(can0)
-instrument_panel = InstrumentPanel(can0)
-radio = Radio(can0)
-radio.run()
-
-a2dpInstance = A2DP(can0, radio=radio, instrument_panel=instrument_panel, steering_wheel=steering_wheel)
+# # proxi = Proxi(can0, loop)
+# status_manager = StatusManager(can0)
+# status_manager.run()
+# steering_wheel = SteeringWheel(can0)
+# instrument_panel = InstrumentPanel(can0)
+# radio = Radio(can0)
+# radio.run()
+#
+# a2dpInstance = A2DP(can0, radio=radio, instrument_panel=instrument_panel, steering_wheel=steering_wheel)
+# # try:
+# a2dpInstance.run()
+# # cat
+#
+#
+#
+# can.Notifier(can0, [
+#     steering_wheel.on_message
+# ], loop=loop)
+#
 # try:
-a2dpInstance.run()
-# cat
-
-
-
-can.Notifier(can0, [
-    steering_wheel.on_message
-], loop=loop)
-
-try:
-    loop.run_forever()
-except KeyboardInterrupt:
-    exit(0)
+#     loop.run_forever()
+# except KeyboardInterrupt:
+#     exit(0)
 
 # loop.call_later(2, a2dpInstance.refresh_properties)
 # mainThread = Thread(target=loop.run_forever)

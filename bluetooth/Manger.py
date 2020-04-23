@@ -25,3 +25,6 @@ class Manager:
 
     def register_device_manager(self):
         self.device_manager = DeviceManager()
+
+
+defaultManger = Manager()

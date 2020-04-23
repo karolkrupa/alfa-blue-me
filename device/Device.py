@@ -1,12 +1,13 @@
 import can
 import time
+import settings
 
 
 class Device:
     arbitration_ids = []
 
-    def __init__(self, bus):
-        self.bus = bus
+    def __init__(self):
+        self.bus = can.ThreadSafeBus(channel = settings.CAN_INTERFACE, bustype = 'socketcan_ctypes')
 
     def send_frames(self, id, frames: [[]]):
         for frame in frames:

@@ -1,6 +1,6 @@
-from device.Device import Device
+from device.ThreadedDevice import ThreadedDevice
 from enum import Enum
-from utils.EventBus import eventBus
+from module.EventBus import mainEventBus
 
 
 # 3C4 80 00 - VOL UP
@@ -15,8 +15,8 @@ from utils.EventBus import eventBus
 # 3C4 00 80 - Menu
 
 class Button(Enum):
-    vol_up = 'vol_up'
-    vol_down = 'vol_down'
+    vol_up = 'vol-up'
+    vol_down = 'vol-down'
     next = 'next'
     prev = 'prev'
     up = 'up'
@@ -43,7 +43,7 @@ buttons_binding = {
 }
 
 
-class SteeringWheel(Device):
+class SteeringWheel(ThreadedDevice):
     arbitration_ids = [0x3C4]
 
     def __received_message(self, msg):
@@ -55,5 +55,8 @@ class SteeringWheel(Device):
 
     def __on_button_click(self, button):
         if button is Button.none:
-            return None
-        eventBus.emit('SteeringWheel:' + str(button.name))
+            return
+        mainEventBus.trigger('steering-wheel:' + str(button.name))
+
+
+steering_wheel = SteeringWheel()

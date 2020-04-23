@@ -9,7 +9,7 @@ class Player:
     __props_iface = None
     event_bus: EventBus = EventBus()
 
-    def __init__(self, player_path):
+    def __init__(self, player_path: str):
         self.__path = player_path
         self.__player_object = dbus.SystemBus().get_object('org.bluez', player_path)
         self.__player_object.connect_to_signal(
@@ -17,7 +17,7 @@ class Player:
             self.__properties_changed_callback,
             dbus_interface='org.freedesktop.DBus.Properties'
         )
-        self.__player_iface = dbus.Interface(self.__player_object, 'org.bluez.MediaControl1')
+        self.__player_iface = dbus.Interface(self.__player_object, 'org.bluez.MediaPlayer1')
         self.__props_iface = dbus.Interface(self.__player_object, 'org.freedesktop.DBus.Properties')
 
     def play(self):
@@ -30,7 +30,7 @@ class Player:
         self.__player_iface.Stop()
 
     def next(self):
-        self.__player_iface.next()
+        self.__player_iface.Next()
 
     def previous(self):
         self.__player_iface.Previous()
@@ -40,6 +40,15 @@ class Player:
 
     def rewind(self):
         self.__player_iface.Rewind()
+
+    def get_prop(self, name: str):
+        try:
+            return self.__props_iface.Get('org.bluez.MediaPlayer1', name)
+        except dbus.exceptions.DBusException:
+            return None
+
+    def get_all_props(self):
+        return self.__props_iface.GetAll('org.bluez.MediaPlayer1')
 
     def __properties_changed_callback(self, interface, changed: dict, invalidated):
         self.event_bus.trigger('properties-changed', changed)

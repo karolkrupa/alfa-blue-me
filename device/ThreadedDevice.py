@@ -1,5 +1,4 @@
 import asyncio
-from event_bus import EventBus
 from device.Device import Device
 from threading import Thread
 
@@ -8,8 +7,8 @@ class ThreadedDevice(Device):
     loop: asyncio.AbstractEventLoop = None
     thread: Thread = None
 
-    def __init__(self, bus):
-        super().__init__(bus)
+    def __init__(self):
+        super().__init__()
         self.loop = asyncio.new_event_loop()
 
     def run(self):
@@ -17,4 +16,4 @@ class ThreadedDevice(Device):
         self.thread.start()
 
     def execute(self):
-        pass
+        self.loop.run_forever()
