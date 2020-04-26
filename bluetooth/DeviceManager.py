@@ -15,6 +15,7 @@ class DeviceManager:
         self.bus = dbus.SystemBus()
 
         mainEventBus.on('bt-agent:device-confirmed', self.__on_new_device)
+        mainEventBus.on('device:connected', self.__on_device_connected)
 
     def set_active_device(self, device: Device):
         if self.active_device:
@@ -39,6 +40,11 @@ class DeviceManager:
         device = Device(args['path'])
         self.devices.append(device)
         if device.has_a2dp():
+            self.set_active_device(device)
+
+    def __on_device_connected(self, args: dict):
+        device = args['device']
+        if not self.has_active_device():
             self.set_active_device(device)
 
     def find_all_devices(self):

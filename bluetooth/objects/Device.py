@@ -1,5 +1,5 @@
 import dbus
-from module.EventBus import EventBus
+from module.EventBus import EventBus, mainEventBus
 from bluetooth.objects.Player import Player
 
 
@@ -66,6 +66,14 @@ class Device:
     def __on_connected_property_change(self, value):
         if not value:
             self.event_bus.trigger('disconnected')
+            mainEventBus.trigger('device:disconnected', {
+                'device': self
+            })
+        else:
+            self.event_bus.trigger('connected')
+            mainEventBus.trigger('device:connected', {
+                'device': self
+            })
 
     def __on_player_change(self, path):
         self.__set_player(path)
