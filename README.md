@@ -1,5 +1,5 @@
 # alfa-blue-me
-Alfa Romeo/Fiat blue&amp;me infotainment system reimplementation based on raspberry Pi for Alfa Romeo 159 (939)
+Alfa Romeo/Fiat blue&amp;me infotainment system reimplementation based on raspberry Pi Zero (CAN module + audio module) for Alfa Romeo 159 (939)
 
 CAN bus setup:
 ```
@@ -10,7 +10,6 @@ sudo ifconfig can0 up
 Python deps:
 ```
 apt install python-dbus
-pip3 install event-bus
 pip install python-can
 ```
 

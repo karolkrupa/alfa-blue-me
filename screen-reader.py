@@ -3,7 +3,6 @@ import asyncio
 from bitstring import BitArray
 from bitstring import Bits
 import utils.TextDecoder as TextDecoder
-import keyboard
 
 can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
 
