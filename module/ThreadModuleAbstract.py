@@ -1,4 +1,3 @@
-from threading import Thread
 import can
 from event_bus import EventBus
 import asyncio

@@ -19,9 +19,9 @@ class DeviceManager:
 
     def set_active_device(self, device: Device):
         if self.active_device:
-            self.active_device.event_bus.remove_forwarding('active-device')
+            self.active_device.event_bus.remove_forwarding('bt-device-manager:active-device')
         self.active_device = device
-        self.active_device.event_bus.add_forwarding('active-device', self.event_bus)
+        self.active_device.event_bus.add_forwarding('bt-device-manager:active-device', self.event_bus)
 
         mainEventBus.trigger('bt-device-manager:active-device', {
             'device': device
@@ -51,4 +51,5 @@ class DeviceManager:
                 continue
             device = Device(path)
             self.devices.append(device)
-            self.set_active_device(device)
+            if device.is_connected():
+                self.set_active_device(device)

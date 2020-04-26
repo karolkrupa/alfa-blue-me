@@ -1,10 +1,10 @@
-# import can
+import can
 import asyncio
 # from threading import Thread
-# from module.A2DP import A2DP
-# from device.SteeringWheel import SteeringWheel
+from module.A2DP import a2dp
+import device.SteeringWheel
 # from device.InstrumentPanel import InstrumentPanel
-from device.Radio import radio
+# from device.Radio import radio
 # from module.Proxi import Proxi
 # from module.StatusManager import StatusManager
 from bluetooth.Manger import defaultManger
@@ -15,15 +15,23 @@ try:
 except ImportError:
     import gobject as GObject
 
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
+# steering_wheel.run()
+
+# steering_wheel.foo()
+
 
 # can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
+
+# can.Notifier(can0, [
+#     steering_wheel.on_message
+# ], loop=loop)
 # can0 = can.ThreadSafeBus(channel = 'vcan', bustype = 'virtual')
 
-defaultManger.register_agent()
-defaultManger.register_device_manager()
+# defaultManger.register_agent()
+# defaultManger.register_device_manager()
 
-player = defaultManger.device_manager.get_active_device().get_player()
+# player = defaultManger.device_manager.get_active_device().get_player()
 
 # def test(arg):
 #     print(player.get_all_props())
@@ -31,7 +39,7 @@ player = defaultManger.device_manager.get_active_device().get_player()
 #
 # player.event_bus.on('properties-changed', test)
 
-player.stop()
+# player.stop()
 # player.play()
 # print(player.get_all_props())
 

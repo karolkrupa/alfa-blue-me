@@ -37,4 +37,4 @@ def print_message(msg: can.Message):
 loop = asyncio.get_event_loop()
 notifier = can.Notifier(can0, [print_message], loop=loop)
 
-loop.run
+loop.run_forever()

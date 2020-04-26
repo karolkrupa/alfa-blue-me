@@ -46,6 +46,10 @@ class Player:
     def rewind(self):
         self.__player_iface.Rewind()
 
+    def is_playing(self):
+        status = self.get_prop('Status')
+        return status == 'playing'
+
     def get_prop(self, name: str):
         try:
             return self.__props_iface.Get('org.bluez.MediaPlayer1', name)
@@ -56,4 +60,6 @@ class Player:
         return self.__props_iface.GetAll('org.bluez.MediaPlayer1')
 
     def __properties_changed_callback(self, interface, changed: dict, invalidated):
-        self.event_bus.trigger('properties-changed', changed)
+        self.event_bus.trigger('properties-changed', {
+            'changed': changed
+        })

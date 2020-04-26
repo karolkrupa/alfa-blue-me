@@ -1,174 +1,83 @@
-import dbus, dbus.mainloop.glib, sys
-from device.SteeringWheel import SteeringWheel
-from device.InstrumentPanel import InstrumentPanel
-from device.Radio import Radio, DisplayMode
-from gi.repository import GLib
-from module.ThreadModuleAbstract import ThreadModuleAbstract
-import can
-from utils.EventBus import eventBus
-from threading import Thread
-import asyncio
-import time
-from pprint import pprint
+from bluetooth.Manger import defaultManger, deviceManager
+from device.Radio import radio, DisplayMode
+from module.EventBus import mainEventBus
 
-class A2DP(ThreadModuleAbstract):
-    player_connected = False
-    glib_thread = None
-    loop = None
-    playing = False
-    player_props = None
-    player = None
 
-    time = 1000
+class A2DP:
+    _interact_with_player = True
 
-    def __init__(self, bus: can.ThreadSafeBus,
-                 steering_wheel: SteeringWheel,
-                 instrument_panel: InstrumentPanel,
-                 radio: Radio
-                 ):
-        super().__init__(bus)
-        self.steering_wheel = steering_wheel
-        self.instrument_panel = instrument_panel
-        self.radio = radio
-
-        eventBus.add_event(self.next, 'SteeringWheel:next')
-        eventBus.add_event(self.prev, 'SteeringWheel:prev')
-        eventBus.add_event(self.__play_pause, 'SteeringWheel:mute')
-
-    def execute(self):
-        asyncio.set_event_loop(self.loop)
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        self.register_dbus_listeners()
-        self.find_media_player()
-        self.loop.run_forever()
-
-    def register_dbus_listeners(self):
-        bus = dbus.SystemBus()
-        bus.add_signal_receiver(
-            self.on_dbus_property_changed,
-            bus_name='org.bluez',
-            signal_name='PropertiesChanged',
-            dbus_interface='org.freedesktop.DBus.Properties'
+    def __init__(self):
+        defaultManger.get_device_manager().event_bus.on(
+            'bt-device-manager:active-device:active-player:properties-changed',
+            self.__on_player_props_change
         )
-        self.__run_glib_loop(GLib.MainLoop())
-
-    def __run_glib_loop(self, loop):
-        self.glib_thread = Thread(target=loop.run)
-        self.glib_thread.start()
-
-    def on_dbus_property_changed(self, interface, changed, invalidated):
-        print(interface)
-        pprint(changed)
-        if interface == 'org.bluez.MediaPlayer1':
-            self.loop.call_soon_threadsafe(self.on_media_player_property_change, changed)
-        elif interface == 'org.bluez.Device1':
-            if changed.get('Connected'):
-                self.loop.call_soon_threadsafe(self.loop.call_later, 0.5, self.find_media_player)
-            else:
-                self.player_connected = False
-
-    def find_media_player(self):
-        print('FIND MEDIA PLAYER')
-        bus = dbus.SystemBus()
-        obj = bus.get_object('org.bluez', "/")
-        mgr = dbus.Interface(obj, 'org.freedesktop.DBus.ObjectManager')
-        mediaPlayer = dbus.Interface(obj, 'org.bluez.MediaPlayer1')
-        # print(mediaPlayer.Status)
-        #
-        # for cos in mediaPlayer:
-        #     print(cos)
-
-        # print(mediaPlayer.Get('org.bluez.MediaPlayer1', 'Name'))
-        # print(mediaPlayer)
-        # vars(mediaPlayer)
-        self.player_connected = False
-        for path, ifaces in mgr.GetManagedObjects().items():
-            adapter = ifaces.get('org.bluez.MediaPlayer1')
-            if not adapter:
-                continue
-            print(path)
-            player = bus.get_object('org.bluez', path)
-            playerIface = dbus.Interface(player, 'org.bluez.MediaPlayer1')
-            propsIface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
-            # print(propsIface.Get('org.bluez.MediaPlayer1', 'Status'))
-            # print(player.Status)
-            # pprint(propsIface.GetAll('org.bluez.MediaPlayer1'))
-        #     self.player_connected = True
-        #     self.player = dbus.Interface(player, dbus_interface='org.bluez.MediaPlayer1')
-        #     self.player_props = dbus.Interface(player, "org.freedesktop.DBus.Properties")
-        #     time.sleep(0.5)
-        #     self.refresh_properties(True)
-        #     # GLib.MainLoop().run()
-        #     print('Player found')
-        #     break
-        # if not adapter:
-        #     print('Player not found')
-        #     self.player_connected = False
-
-    def refresh_properties(self, update_track_name = False):
-
-        if self.player_connected:
-            self.display_position(self.player_props.Get("org.bluez.MediaPlayer1", 'Position'))
-
-            if update_track_name:
-                if self.player_props.Get("org.bluez.MediaPlayer1", 'Status') == 'playing':
-                    self.playing = True
-                self.display_track_name('Brak', 'Brak')
-            # self.display_position(self.time)
-        self.loop.call_later(1, self.refresh_properties)
-
-    def display_position(self, position):
-        minutes = position / 1000 / 60
-        minutes_from_start = int(minutes)
-        seconds_from_start = int((minutes - minutes_from_start) * 60)
-        if minutes_from_start < 10:
-            minutes_from_start = '0' + str(minutes_from_start)
-        if seconds_from_start < 10:
-            seconds_from_start = '0' + str(seconds_from_start)
-        self.radio.time_minutes = minutes_from_start
-        self.radio.time_seconds = seconds_from_start
-
-    def on_media_player_property_change(self, changed):
-        for prop, value in changed.items():
-            if prop == 'Status':
-                if value == 'playing':
-                    self.playing = True
-                else:
-                    self.playing = False
-            elif prop == 'Track':
-                if value.get('Title', ''):
-                    self.display_track_name(value.get('Artist', ''), value.get('Title', ''))
-
-    def display_track_name(self, artist, title):
-        if artist:
-            self.radio.set_display_mode(DisplayMode.artists)
-        else:
-            self.radio.set_display_mode(DisplayMode.text)
-
-        print('dispaly track');
-        self.radio.set_first_field(artist)
-        self.radio.set_second_filed(title)
-        self.radio.display()
-
-    def next(self):
-        if not self.player_connected: return
-        self.player.Next()
-
-    def prev(self):
-        if not self.player_connected: return
-        self.player.Previous()
+        self.__register_steering_wheel_events()
 
     def play(self):
-        if not self.player_connected: return
-        self.player.Play()
+        if not self._can_interact_with_player():
+            return
+
+        self._get_active_player().play()
+
+    def toggle_play(self):
+        if not self._can_interact_with_player():
+            return
+
+        if self._get_active_player().is_playing():
+            self.pause()
+        else:
+            self.play()
 
     def pause(self):
-        if not self.player_connected: return
-        self.player.Pause()
+        if not self._can_interact_with_player():
+            return
 
-    def __play_pause(self):
-        if not self.player_connected: return
-        if not self.playing:
-            self.play()
+        self._get_active_player().pause()
+
+    def next(self):
+        if not self._can_interact_with_player():
+            return
+
+        self._get_active_player().next()
+
+    def previous(self):
+        if not self._can_interact_with_player():
+            return
+
+        self._get_active_player().previous()
+
+    def _is_player(self):
+        if not deviceManager.has_active_device():
+            return False
+
+        return deviceManager.get_active_device().has_player()
+
+    def _can_interact_with_player(self):
+        return self._is_player() and self._interact_with_player
+
+    def _get_active_player(self):
+        return deviceManager.get_active_device().get_player()
+
+    def __on_player_props_change(self, arg):
+        changed = arg['changed']  # type: dict
+        if 'Track' in changed:
+            track = changed['Track']  # type: dict
+            self.__display_track_name(track.get('Artist', ''), track.get('Title', ''))
+
+    def __display_track_name(self, artist, title):
+        if artist:
+            radio.set_display_mode(DisplayMode.artists)
         else:
-            self.pause()
+            radio.set_display_mode(DisplayMode.text)
+
+        radio.set_first_field(artist)
+        radio.set_second_filed(title)
+        radio.display()
+
+    def __register_steering_wheel_events(self):
+        mainEventBus.on('steering-wheel:next', lambda args: self.next())
+        mainEventBus.on('steering-wheel:prev', lambda args: self.previous())
+        mainEventBus.on('steering-wheel:mute', lambda args: self.toggle_play())
+
+
+a2dp = A2DP()

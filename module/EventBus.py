@@ -23,7 +23,7 @@ class EventBus:
 
         return EventPointer(self, event_name, callback_id)
 
-    def off(self, event_name: str, callback_id: str, event_pointer = None):
+    def off(self, event_name: str, callback_id: str, event_pointer=None):
         if event_pointer:
             event_name = event_pointer.event_name
             callback_id = event_pointer.callback_id

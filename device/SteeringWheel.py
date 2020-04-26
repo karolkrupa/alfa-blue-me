@@ -44,14 +44,16 @@ buttons_binding = {
 
 
 class SteeringWheel(ThreadedDevice):
-    arbitration_ids = [0x3C4]
+    _can_filters = [
+        {
+            "can_id": 0x3C4,
+            "can_mask": 0x3FF,
+            "extended": False
+        }
+    ]
 
-    def __received_message(self, msg):
+    def _on_message(self, msg):
         self.__on_button_click(buttons_binding[msg.data.hex()])
-
-    def on_message(self, msg):
-        if msg.arbitration_id in self.arbitration_ids:
-            self.__received_message(msg)
 
     def __on_button_click(self, button):
         if button is Button.none:
@@ -60,3 +62,4 @@ class SteeringWheel(ThreadedDevice):
 
 
 steering_wheel = SteeringWheel()
+steering_wheel.run()

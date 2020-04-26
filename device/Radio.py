@@ -1,7 +1,7 @@
 from device.ThreadedDevice import ThreadedDevice
 import utils.TextEncoder as TextEncoder
 from enum import Enum
-from utils.EventBus import eventBus
+from module.EventBus import mainEventBus
 
 
 class DisplayMode(Enum):
@@ -14,16 +14,22 @@ class DisplayMode(Enum):
 
 
 class Radio(ThreadedDevice):
-    arbitration_ids = [0x405]
     first_field = ''
     second_field = ''
     time_minutes = None
     time_seconds = None
     display_mode = DisplayMode.text
+    _can_filters = [
+        {
+            "can_id": 0x405,
+            "can_mask": 0x3FF,
+            "extended": False
+        }
+    ]
 
-    def execute(self):
+    def _execute(self):
         self.display_time()
-        self.loop.run_forever()
+        super()._execute()
 
     def set_display_mode(self, display_mode: DisplayMode):
         self.display_mode = display_mode
@@ -34,9 +40,9 @@ class Radio(ThreadedDevice):
     def set_second_filed(self, title_text):
         self.second_field = title_text
 
-    def __received_message(self, msg):
+    def _on_message(self, msg):
         if msg.data == bytearray([0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]):
-            eventBus.emit('Radio:open_media_player')
+            mainEventBus.trigger('radio:open-media-player')
 
     def display(self):
         if self.display_mode is DisplayMode.folder:
@@ -64,7 +70,7 @@ class Radio(ThreadedDevice):
             self.send_frames(0x427, [[0x00, 0x00, 0xC8, 0x78, 0x00, 0x00, 0x00, 0x00]])
         else:
             self.send_frames(0x427, [[int('0x' + str(self.time_minutes), 16), int('0x' + str(self.time_seconds), 16), self.display_mode.value, 0x78, 0x00, 0x00, 0x00, 0x00]])
-        self.loop.call_later(1, self.display_time)
+        self._loop.call_later(1, self.display_time)
 
 # 48 - Folders Nazwa folderu<field spearator>Tytul
 # 50 - Artists Artysta <field separator> Artysta <field separator> Tytul Na artyscie miesci sie 13 znakow i 14 uciety

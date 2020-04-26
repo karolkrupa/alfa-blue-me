@@ -38,7 +38,7 @@ class Device:
 
     def get_player(self):
         if not self.__player:
-            raise Exception("Device has'nt player " + self.__path)
+            raise Exception("Device hasn't player " + self.__path)
 
         return self.__player
 

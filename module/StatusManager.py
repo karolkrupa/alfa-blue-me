@@ -1,6 +1,6 @@
 import can
 from module.ThreadModuleAbstract import ThreadModuleAbstract
-from utils.EventBus import eventBus
+from module.EventBus import mainEventBus
 import asyncio
 
 
@@ -11,7 +11,6 @@ class StatusManager(ThreadModuleAbstract):
 
     def __init__(self, bus):
         super().__init__(bus)
-        eventBus.add_event(self.open_media_player, 'Radio:open_media_player')
 
     def execute(self):
         asyncio.set_event_loop(self.loop)
