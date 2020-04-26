@@ -91,11 +91,11 @@ class A2DP:
 
     def _on_device_change(self, device: Device):
         if self._bluealsa_process:
-            self._bluealsa_process.poll()
-        self._bluealsa_process = subprocess.run([
-            'bluealsa-aplay',
-            device.get_address()
-        ])
+            self._bluealsa_process.kill()
+        self._bluealsa_process = subprocess.Popen(
+            'bluealsa-aplay ' + device.get_address(),
+            shell=True
+        )
 
 
 a2dp = A2DP()

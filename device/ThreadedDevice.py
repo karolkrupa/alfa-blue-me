@@ -17,7 +17,7 @@ class ThreadedDevice(Device):
 
     def run(self):
         self._thread = Thread(target=self._execute)
-        # self._thread.daemon = True
+        self._thread.daemon = True
         self._thread.start()
 
     def _execute(self):
