@@ -1,10 +1,13 @@
 from bluetooth.Manger import defaultManger, deviceManager
 from device.Radio import radio, DisplayMode
 from module.EventBus import mainEventBus
+import subprocess
+from bluetooth.objects.Device import Device
 
 
 class A2DP:
     _interact_with_player = True
+    _bluealsa_process = None
 
     def __init__(self):
         defaultManger.get_device_manager().event_bus.on(
@@ -12,6 +15,7 @@ class A2DP:
             self.__on_player_props_change
         )
         self.__register_steering_wheel_events()
+        self.__register_player_change_event()
 
     def play(self):
         if not self._can_interact_with_player():
@@ -78,6 +82,20 @@ class A2DP:
         mainEventBus.on('steering-wheel:next', lambda args: self.next())
         mainEventBus.on('steering-wheel:prev', lambda args: self.previous())
         mainEventBus.on('steering-wheel:mute', lambda args: self.toggle_play())
+
+    def __register_player_change_event(self):
+        mainEventBus.on(
+            'bt-device-manager:active-device',
+            lambda args: self._on_device_change(args['device'])
+        )
+
+    def _on_device_change(self, device: Device):
+        if self._bluealsa_process:
+            self._bluealsa_process.poll()
+        self._bluealsa_process = subprocess.run([
+            'bluealsa-aplay',
+            device.get_address()
+        ])
 
 
 a2dp = A2DP()

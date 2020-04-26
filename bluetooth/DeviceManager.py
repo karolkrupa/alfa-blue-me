@@ -13,7 +13,6 @@ class DeviceManager:
     def __init__(self):
         self.event_bus = EventBus()
         self.bus = dbus.SystemBus()
-        self.__find_all_devices()
 
         mainEventBus.on('bt-agent:device-confirmed', self.__on_new_device)
 
@@ -42,7 +41,7 @@ class DeviceManager:
         if device.has_a2dp():
             self.set_active_device(device)
 
-    def __find_all_devices(self):
+    def find_all_devices(self):
         obj = self.bus.get_object('org.bluez', "/")
         mgr = dbus.Interface(obj, 'org.freedesktop.DBus.ObjectManager')
         for path, ifaces in mgr.GetManagedObjects().items():

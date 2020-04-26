@@ -42,6 +42,9 @@ class Device:
 
         return self.__player
 
+    def get_address(self):
+        return self.get_prop('Address')
+
     def __find_player(self):
         if self.__player is not None:
             return

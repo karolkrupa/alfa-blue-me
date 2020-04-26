@@ -17,7 +17,7 @@ class ThreadedDevice(Device):
 
     def run(self):
         self._thread = Thread(target=self._execute)
-        self._thread.daemon = True
+        # self._thread.daemon = True
         self._thread.start()
 
     def _execute(self):
@@ -25,11 +25,6 @@ class ThreadedDevice(Device):
 
     def _on_message(self, msg: can.Message):
         pass
-
-    def send_frames(self, id, frames: [[]]):
-        for frame in frames:
-            self._can.send(can.Message(arbitration_id=id, data=frame, extended_id=False))
-            time.sleep(0.01)
 
     def __register_notifier(self):
         self._notifier = can.Notifier(self._can, [
