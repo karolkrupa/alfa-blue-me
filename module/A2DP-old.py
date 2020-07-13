@@ -1,6 +1,6 @@
-import dbus, dbus.mainloop.glib, sys
+import dbus, dbus.mainloop.glib
 from device.SteeringWheel import SteeringWheel
-from device.InstrumentPanel import InstrumentPanel
+from device.InstrumentPanel.Screen import InstrumentPanel
 from device.Radio import Radio, DisplayMode
 from gi.repository import GLib
 from module.ThreadModuleAbstract import ThreadModuleAbstract
@@ -8,7 +8,6 @@ import can
 # from utils.EventBus import eventBus
 from threading import Thread
 import asyncio
-import time
 from pprint import pprint
 
 class A2DP(ThreadModuleAbstract):
@@ -57,8 +56,6 @@ class A2DP(ThreadModuleAbstract):
         self.glib_thread.start()
 
     def on_dbus_property_changed(self, interface, changed, invalidated):
-        print(interface)
-        pprint(changed)
         if interface == 'org.bluez.MediaPlayer1':
             self.loop.call_soon_threadsafe(self.on_media_player_property_change, changed)
         elif interface == 'org.bluez.Device1':
@@ -86,7 +83,7 @@ class A2DP(ThreadModuleAbstract):
             adapter = ifaces.get('org.bluez.MediaPlayer1')
             if not adapter:
                 continue
-            print(path)
+
             player = bus.get_object('org.bluez', path)
             playerIface = dbus.Interface(player, 'org.bluez.MediaPlayer1')
             propsIface = dbus.Interface(player, 'org.freedesktop.DBus.Properties')
@@ -145,7 +142,6 @@ class A2DP(ThreadModuleAbstract):
         else:
             self.radio.set_display_mode(DisplayMode.text)
 
-        print('dispaly track');
         self.radio.set_first_field(artist)
         self.radio.set_second_filed(title)
         self.radio.display()

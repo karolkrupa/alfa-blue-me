@@ -6,8 +6,6 @@ from multiprocessing import Process
 
 
 def on_property_changed(interface, changed, invalidated):
-    print(interface)
-    print(changed)
     if interface != 'org.bluez.MediaPlayer1':
         return
     for prop, value in changed.items():

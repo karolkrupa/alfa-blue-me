@@ -12,7 +12,7 @@ from module.EventBus import mainEventBus
 # 3C4 04 00 - SRC
 # 3C4 00 40 - Windows
 # 3C4 20 00 - Mute
-# 3C4 00 80 - Menu
+# 3C4 00 80 - menu
 
 class Button(Enum):
     vol_up = 'vol-up'
@@ -34,8 +34,8 @@ buttons_binding = {
     bytearray([0x40, 0x00]).hex(): Button.vol_down,
     bytearray([0x10, 0x00]).hex(): Button.next,
     bytearray([0x08, 0x00]).hex(): Button.prev,
-    bytearray([0x08, 0x02]).hex(): Button.up,
-    bytearray([0x10, 0x01]).hex(): Button.down,
+    bytearray([0x00, 0x02]).hex(): Button.up,
+    bytearray([0x00, 0x01]).hex(): Button.down,
     bytearray([0x04, 0x00]).hex(): Button.src,
     bytearray([0x00, 0x40]).hex(): Button.win,
     bytearray([0x20, 0x00]).hex(): Button.mute,
@@ -53,7 +53,8 @@ class SteeringWheel(ThreadedDevice):
     ]
 
     def _on_message(self, msg):
-        self.__on_button_click(buttons_binding[msg.data.hex()])
+        if msg.data.hex() in buttons_binding.keys():
+            self.__on_button_click(buttons_binding[msg.data.hex()])
 
     def __on_button_click(self, button):
         if button is Button.none:

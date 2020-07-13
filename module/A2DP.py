@@ -16,6 +16,7 @@ class A2DP:
         )
         self.__register_steering_wheel_events()
         self.__register_player_change_event()
+        self.__register_player_enabled_event()
 
     def play(self):
         if not self._can_interact_with_player():
@@ -66,6 +67,8 @@ class A2DP:
         changed = arg['changed']  # type: dict
         if 'Track' in changed:
             track = changed['Track']  # type: dict
+            if not track.get('Artist', False) and not track.get('Title', False):
+                return
             self.__display_track_name(track.get('Artist', ''), track.get('Title', ''))
 
     def __display_track_name(self, artist, title):
@@ -89,12 +92,26 @@ class A2DP:
             lambda args: self._on_device_change(args['device'])
         )
 
+    def __register_player_enabled_event(self):
+        mainEventBus.on(
+            'status-manager:media-player-enabled',
+            lambda args: self.__on_player_enabled_change(args['enabled'])
+        )
+
+    def __on_player_enabled_change(self, enabled: bool):
+        if enabled:
+            self.play()
+        else:
+            self.pause()
+
     def _on_device_change(self, device: Device):
         if self._bluealsa_process:
             self._bluealsa_process.kill()
+            self._bluealsa_process.wait()
+
         self._bluealsa_process = subprocess.Popen(
-            'bluealsa-aplay ' + device.get_address(),
-            shell=True
+            'exec bluealsa-aplay ' + device.get_address(),
+            shell=True,
         )
 
 

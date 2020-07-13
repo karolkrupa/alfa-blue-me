@@ -14,9 +14,9 @@ while(True):
     elif val == 'left':
         msg = can.Message(arbitration_id=0x3C4, data=[0x08, 0x00], is_extended_id=False)
     elif val == 'down':
-        msg = can.Message(arbitration_id=0x3C4, data=[0x10, 0x01], is_extended_id=False)
+        msg = can.Message(arbitration_id=0x3C4, data=[0x00, 0x01], is_extended_id=False)
     elif val == 'up':
-        msg = can.Message(arbitration_id=0x3C4, data=[0x08, 0x02], is_extended_id=False)
+        msg = can.Message(arbitration_id=0x3C4, data=[0x00, 0x02], is_extended_id=False)
     elif val == 'src':
         msg = can.Message(arbitration_id=0x3C4, data=[0x04, 0x00], is_extended_id=False)
     elif val == 'win':

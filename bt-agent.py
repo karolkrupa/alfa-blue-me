@@ -27,7 +27,6 @@ class Agent(dbus.service.Object):
 
     @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
     def Release(self):
-        print("Release")
         if self.exit_on_release:
             mainloop.quit()
 

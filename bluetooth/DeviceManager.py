@@ -14,8 +14,20 @@ class DeviceManager:
         self.event_bus = EventBus()
         self.bus = dbus.SystemBus()
 
-        mainEventBus.on('bt-agent:device-confirmed', self.__on_new_device)
+        self.bus.add_signal_receiver(
+            self.on_dbus_property_changed,
+            bus_name='org.bluez',
+            signal_name='PropertiesChanged',
+            dbus_interface='org.freedesktop.DBus.Properties',
+            path_keyword="path"
+        )
+
         mainEventBus.on('device:connected', self.__on_device_connected)
+
+    def on_dbus_property_changed(self, interface, changed, invalidated, path=None):
+        if interface == 'org.bluez.Device1':
+            if 'Paired' in changed:
+                self.__on_new_device(path)
 
     def set_active_device(self, device: Device):
         if self.active_device:
@@ -36,8 +48,21 @@ class DeviceManager:
     def get_active_device(self):
         return self.active_device
 
-    def __on_new_device(self, args: dict):
-        device = Device(args['path'])
+    def get_devices(self):
+        return self.devices
+
+    def get_device_by_address(self, address):
+        for device in self.devices:
+            if device.get_address() == address:
+                return device
+        return None
+
+    def __on_new_device(self, path):
+        print('On NEW DEVICE')
+        device = Device(path)
+        if self.get_device_by_address(device.get_address()):
+            del device
+            return
         self.devices.append(device)
         if device.has_a2dp():
             self.set_active_device(device)
@@ -56,5 +81,5 @@ class DeviceManager:
                 continue
             device = Device(path)
             self.devices.append(device)
-            if device.is_connected():
+            if device.is_connected() and not self.has_active_device():
                 self.set_active_device(device)

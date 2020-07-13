@@ -1,0 +1,14 @@
+[Unit]
+Description=A2DP Playback
+After=bluealsa.service syslog.service
+Requires=bluealsa.service
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/blue-me/main.py
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=BlueAndMe
+User=pi
+
+[Install]
+WantedBy=multi-user.target

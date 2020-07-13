@@ -22,12 +22,25 @@ class Device:
             self.__on_properties_changed,
             dbus_interface='org.freedesktop.DBus.Properties'
         )
-        self.__dbus_iface = dbus.Interface('org.bluez.Device1', self.__dbus_obj)
+        self.__dbus_iface = dbus.Interface(self.__dbus_obj, 'org.bluez.Device1')
         self.__dbus_props_iface = dbus.Interface(self.__dbus_obj, 'org.freedesktop.DBus.Properties')
         self.__find_player()
 
+    def __del__(self):
+        if self.__player:
+            del self.__player
+        self.event_bus.off_all()
+        del self.event_bus
+
     def is_connected(self):
         return self.get_prop('Connected')
+
+    def connect(self):
+        print("CONNECT")
+        self.__dbus_iface.Connect()
+
+    def connect_profile(self, profile):
+        self.__dbus_iface.ConnectProfile(profile)
 
     def has_a2dp(self):
         uuids = self.get_prop('UUIDs')
@@ -44,6 +57,12 @@ class Device:
 
     def get_address(self):
         return self.get_prop('Address')
+
+    def get_rssi(self):
+        return self.get_prop('RSSI')
+
+    def get_name(self):
+        return self.get_prop('Name', 'Unknown')
 
     def __find_player(self):
         if self.__player is not None:
@@ -88,5 +107,11 @@ class Device:
             'player': self.get_player()
         })
 
-    def get_prop(self, prop_name: str):
-        return self.__dbus_props_iface.Get('org.bluez.Device1', prop_name)
+    def get_prop(self, prop_name: str, default=None):
+        try:
+            return self.__dbus_props_iface.Get('org.bluez.Device1', prop_name)
+        except Exception:
+            return default
+
+    def get_all_props(self):
+        return self.__dbus_props_iface.GetAll('org.bluez.Device1')
