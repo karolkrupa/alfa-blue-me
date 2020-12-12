@@ -53,6 +53,9 @@ class Adapter:
     def stop_discovery(self):
         self.__adapter_iface.StopDiscovery()
 
+    def is_discovering(self):
+        return self.get_prop('Discovering')
+
     def __properties_changed_callback(self, interface, changed: dict, invalidated):
         self.event_bus.trigger('properties-changed', {
             'changed': changed

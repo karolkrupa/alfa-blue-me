@@ -1,4 +1,3 @@
-import bluetooth
 from bluetooth.Agent import Agent
 from bluetooth.Adapter import Adapter
 from bluetooth.DeviceManager import DeviceManager

@@ -13,8 +13,7 @@ class EventBus:
         self.off_all()
 
     def on(self, event_name: str, callback):
-        print('ON')
-        print(event_name)
+        # print(event_name)
         callback_id = str(uuid.uuid1())
         if event_name not in self.callbacks:
             self.callbacks[event_name] = {
@@ -43,8 +42,8 @@ class EventBus:
         self.forwards = {}
 
     def trigger(self, event_name: str, args: dict = {}):
-        print(event_name)
-        print(event_name in self.callbacks)
+        # print(event_name)
+        # print(event_name in self.callbacks)
         if event_name in self.callbacks:
             for callback in self.callbacks[event_name].values():
                 callback(args)

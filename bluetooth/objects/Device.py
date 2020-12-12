@@ -35,9 +35,17 @@ class Device:
     def is_connected(self):
         return self.get_prop('Connected')
 
+    def is_paired(self):
+        return self.get_prop('Paired')
+
+    def pair(self):
+        self.__dbus_iface.Pair()
+
     def connect(self):
-        print("CONNECT")
         self.__dbus_iface.Connect()
+
+    def disconnect(self):
+        self.__dbus_iface.Disconnect()
 
     def connect_profile(self, profile):
         self.__dbus_iface.ConnectProfile(profile)
@@ -77,10 +85,12 @@ class Device:
                 self.__set_player(path)
 
     def __on_properties_changed(self, interface, changed: dict, invalidated):
-        if changed.get('Connected'):
+        if 'Connected' in changed:
             self.__on_connected_property_change(changed.get('Connected'))
-        if changed.get('Player'):
+        if 'Player' in changed:
             self.__on_player_change(changed.get('Player'))
+        if 'Paired' in changed:
+            self.__on_paired_change(changed.get('Paired'))
 
     def __on_connected_property_change(self, value):
         if not value:
@@ -96,6 +106,18 @@ class Device:
 
     def __on_player_change(self, path):
         self.__set_player(path)
+
+    def __on_paired_change(self, value):
+        if not value:
+            self.event_bus.trigger('unpaired')
+            mainEventBus.trigger('device:unpaired', {
+                'device': self
+            })
+        else:
+            self.event_bus.trigger('paired')
+            mainEventBus.trigger('device:paired', {
+                'device': self
+            })
 
     def __set_player(self, player_path: str):
         self.__player_path = player_path

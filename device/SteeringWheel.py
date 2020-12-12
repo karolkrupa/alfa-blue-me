@@ -1,6 +1,7 @@
 from device.ThreadedDevice import ThreadedDevice
 from enum import Enum
 from module.EventBus import mainEventBus
+import time
 
 
 # 3C4 80 00 - VOL UP
@@ -52,6 +53,8 @@ class SteeringWheel(ThreadedDevice):
         }
     ]
 
+    _button_debounce = {}
+
     def _on_message(self, msg):
         if msg.data.hex() in buttons_binding.keys():
             self.__on_button_click(buttons_binding[msg.data.hex()])
@@ -59,7 +62,9 @@ class SteeringWheel(ThreadedDevice):
     def __on_button_click(self, button):
         if button is Button.none:
             return
-        mainEventBus.trigger('steering-wheel:' + str(button.name))
+        if button.name not in self._button_debounce or self._button_debounce[button.name] < time.time():
+            mainEventBus.trigger('steering-wheel:' + str(button.name))
+            self._button_debounce[button.name] = time.time() + 0.7
 
 
 steering_wheel = SteeringWheel()

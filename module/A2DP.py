@@ -108,8 +108,8 @@ class A2DP:
         if self._bluealsa_process:
             self._bluealsa_process.kill()
             self._bluealsa_process.wait()
-
         self._bluealsa_process = subprocess.Popen(
+            # 'exec bluealsa-aplay --pcm-buffer-time=10000000 ' + device.get_address(),
             'exec bluealsa-aplay ' + device.get_address(),
             shell=True,
         )

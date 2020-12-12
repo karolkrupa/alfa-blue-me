@@ -8,7 +8,7 @@ ExecStart=/usr/bin/python3 /home/pi/blue-me/main.py
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=BlueAndMe
-User=pi
+User=root
 
 [Install]
 WantedBy=multi-user.target

@@ -23,21 +23,26 @@ class DeviceManager:
         )
 
         mainEventBus.on('device:connected', self.__on_device_connected)
+        mainEventBus.on('device:disconnected', self.__on_device_disconnected)
 
     def on_dbus_property_changed(self, interface, changed, invalidated, path=None):
         if interface == 'org.bluez.Device1':
             if 'Paired' in changed:
                 self.__on_new_device(path)
 
-    def set_active_device(self, device: Device):
+    def set_active_device(self, new_device):
         if self.active_device:
             self.active_device.event_bus.remove_forwarding('bt-device-manager:active-device')
-        self.active_device = device
-        self.active_device.event_bus.add_forwarding('bt-device-manager:active-device', self.event_bus)
+            if self.active_device.is_connected():
+                self.active_device.disconnect()
 
-        mainEventBus.trigger('bt-device-manager:active-device', {
-            'device': device
-        })
+        self.active_device = new_device
+
+        if new_device:
+            self.active_device.event_bus.add_forwarding('bt-device-manager:active-device', self.event_bus)
+            mainEventBus.trigger('bt-device-manager:active-device', {
+                'device': new_device
+            })
 
     def has_active_device(self):
         if not self.active_device:
@@ -58,7 +63,6 @@ class DeviceManager:
         return None
 
     def __on_new_device(self, path):
-        print('On NEW DEVICE')
         device = Device(path)
         if self.get_device_by_address(device.get_address()):
             del device
@@ -71,6 +75,21 @@ class DeviceManager:
         device = args['device']
         if not self.has_active_device():
             self.set_active_device(device)
+
+    def __on_device_disconnected(self, args: dict):
+        device = args['device']
+        if self.active_device == device:
+            next_device = self.__get_first_available_device()
+            if next_device:
+                self.set_active_device(next_device)
+            else:
+                self.set_active_device(None)
+
+    def __get_first_available_device(self):
+        for device in self.get_devices():
+            if device.is_connected() and device.has_a2dp():
+                return device
+        return None
 
     def find_all_devices(self):
         obj = self.bus.get_object('org.bluez', "/")

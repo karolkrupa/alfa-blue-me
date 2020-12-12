@@ -72,7 +72,6 @@ def decode(message: str):
     decoded = ''
     decode_index = 0
     while decode_index < len(message):
-
         decoded += dictornay.get(message[decode_index:decode_index + 6], '')
         decode_index += 6
     return decoded

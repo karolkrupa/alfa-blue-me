@@ -3,6 +3,7 @@ import asyncio
 from bitstring import BitArray
 from bitstring import Bits
 import utils.TextDecoder as TextDecoder
+import curses
 
 can0 = can.ThreadSafeBus(channel = 'vcan0', bustype = 'socketcan_ctypes')
 
@@ -15,6 +16,20 @@ can0.set_filters([
 ])
 
 txt = ''
+
+screen = curses.initscr()
+
+curses.noecho()
+curses.cbreak()
+
+screen.keypad(True)
+
+
+instrumentPanelWindow = curses.newwin(6, 20, 0, 0)
+instrumentPanelWindow.border()
+
+screen.refresh()
+instrumentPanelWindow.refresh()
 
 def print_message(msg: can.Message):
     global txt
@@ -30,10 +45,31 @@ def print_message(msg: can.Message):
     txt = txt + frame.bin
 
     if frameNumber == frameCount:
-        print(TextDecoder.decode(txt))
+        instrumentPanelWindow.clear()
+        text = TextDecoder.decode(txt)
+        fragments = text.split("\n")
+        # print(fragments)
+
+        row = 1
+        for fragment in fragments:
+            instrumentPanelWindow.addstr(row, 1, ' ' + fragment)
+            # print(fragment)
+            # print(row)
+            row += 1
+        instrumentPanelWindow.border()
+        instrumentPanelWindow.refresh()
+        # print(TextDecoder.decode(txt))
         txt = ''
 
-loop = asyncio.get_event_loop()
-notifier = can.Notifier(can0, [print_message], loop=loop)
 
-loop.run_forever()
+loop = asyncio.get_event_loop()
+try:
+    notifier = can.Notifier(can0, [print_message], loop=loop)
+    loop.run_forever()
+except:
+    curses.nocbreak()
+    screen.keypad(False)
+    curses.echo()
+    curses.endwin()
+    raise
+
